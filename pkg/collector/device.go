@@ -13,6 +13,8 @@ type deviceCollector struct {
 	omadaDeviceNeedUpgrade    *prometheus.Desc
 	omadaDeviceTxRate         *prometheus.Desc
 	omadaDeviceRxRate         *prometheus.Desc
+	omadaDeviceDownload       *prometheus.Desc
+	omadaDeviceUpload         *prometheus.Desc
 	omadaDevicePoeRemainWatts *prometheus.Desc
 	client                    *api.Client
 }
@@ -50,9 +52,11 @@ func (c *deviceCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.omadaDeviceCpuPercentage, prometheus.GaugeValue, item.CpuUtil, labels...)
 		ch <- prometheus.MustNewConstMetric(c.omadaDeviceMemPercentage, prometheus.GaugeValue, item.MemUtil, labels...)
 		ch <- prometheus.MustNewConstMetric(c.omadaDeviceNeedUpgrade, prometheus.GaugeValue, needUpgrade, labels...)
+		ch <- prometheus.MustNewConstMetric(c.omadaDeviceDownload, prometheus.CounterValue, item.Download, labels...)
+		ch <- prometheus.MustNewConstMetric(c.omadaDeviceUpload, prometheus.CounterValue, item.Upload, labels...)
 		if item.Type == "ap" {
-			ch <- prometheus.MustNewConstMetric(c.omadaDeviceTxRate, prometheus.CounterValue, item.TxRate, labels...)
-			ch <- prometheus.MustNewConstMetric(c.omadaDeviceRxRate, prometheus.CounterValue, item.RxRate, labels...)
+			ch <- prometheus.MustNewConstMetric(c.omadaDeviceTxRate, prometheus.GaugeValue, item.TxRate, labels...)
+			ch <- prometheus.MustNewConstMetric(c.omadaDeviceRxRate, prometheus.GaugeValue, item.RxRate, labels...)
 		}
 		if item.Type == "switch" {
 			ch <- prometheus.MustNewConstMetric(c.omadaDevicePoeRemainWatts, prometheus.GaugeValue, item.PoeRemain, labels...)
@@ -81,6 +85,16 @@ func NewDeviceCollector(c *api.Client) *deviceCollector {
 		),
 		omadaDeviceNeedUpgrade: prometheus.NewDesc("omada_device_need_upgrade",
 			"A boolean on whether the device needs an upgrade.",
+			labels,
+			nil,
+		),
+		omadaDeviceDownload: prometheus.NewDesc("omada_device_download",
+			"Accumulative download traffic in bytes.",
+			labels,
+			nil,
+		),
+		omadaDeviceUpload: prometheus.NewDesc("omada_device_upload",
+			"Accumulative upload traffic in bytes.",
 			labels,
 			nil,
 		),

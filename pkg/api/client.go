@@ -35,19 +35,6 @@ func (c *Client) GetClients() ([]NetworkClient, error) {
 
 // gets clients by filters in omada - currentl supports SwitchMac
 func (c *Client) getClientsWithFilters(filtersEnabled bool, mac string) ([]NetworkClient, error) {
-	loggedIn, err := c.IsLoggedIn()
-	if err != nil {
-		return nil, err
-	}
-	if !loggedIn {
-		log.Info().Msg(fmt.Sprintf("not logged in, logging in with user: %s", c.Config.Username))
-		err := c.Login()
-		if err != nil || c.token == "" {
-			log.Error().Err(err).Msg("Failed to login")
-			return nil, err
-		}
-	}
-
 	url := fmt.Sprintf("%s/%s/api/v2/sites/%s/clients", c.Config.Host, c.omadaCID, c.SiteId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -64,8 +51,7 @@ func (c *Client) getClientsWithFilters(filtersEnabled bool, mac string) ([]Netwo
 
 	req.URL.RawQuery = q.Encode()
 
-	setHeaders(req, c.token)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.makeLoggedInRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +86,8 @@ type NetworkClient struct {
 	Wireless    bool    `json:"wireless"`
 	SwitchMac   string  `json:"switchMac"`
 	Vendor      string  `json:"vendor"`
-	Activity    float64 `json:"activity"`
+	Download    float64 `json:"trafficDown"`
+	Upload      float64 `json:"trafficUp"`
 	SignalLevel float64 `json:"signalLevel"`
 	WifiMode    float64 `json:"wifiMode"`
 	Ssid        string  `json:"ssid"`
