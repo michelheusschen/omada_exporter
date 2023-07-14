@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/charlie-haley/omada_exporter/pkg/config"
+	"github.com/michelheusschen/omada_exporter/pkg/config"
 )
 
 func createMockServer() (*http.Client, *httptest.Server) {

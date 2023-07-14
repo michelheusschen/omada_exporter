@@ -1,4 +1,4 @@
-module github.com/charlie-haley/omada_exporter
+module github.com/michelheusschen/omada_exporter
 
 go 1.19
 
