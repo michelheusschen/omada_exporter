@@ -9,14 +9,16 @@ import (
 )
 
 type clientCollector struct {
-	omadaClientDownloadActivityBytes *prometheus.Desc
-	omadaClientSignalDbm             *prometheus.Desc
-	omadaClientConnectedTotal        *prometheus.Desc
-	client                           *api.Client
+	omadaClientDownloadBytes  *prometheus.Desc
+	omadaClientUploadBytes    *prometheus.Desc
+	omadaClientSignalDbm      *prometheus.Desc
+	omadaClientConnectedTotal *prometheus.Desc
+	client                    *api.Client
 }
 
 func (c *clientCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.omadaClientDownloadActivityBytes
+	ch <- c.omadaClientDownloadBytes
+	ch <- c.omadaClientUploadBytes
 	ch <- c.omadaClientSignalDbm
 	ch <- c.omadaClientConnectedTotal
 }
@@ -40,14 +42,18 @@ func (c *clientCollector) Collect(ch chan<- prometheus.Metric) {
 		port := fmt.Sprintf("%.0f", item.Port)
 		if item.Wireless {
 			wifiMode := fmt.Sprintf("%.0f", item.WifiMode)
-			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadActivityBytes, prometheus.GaugeValue, item.Activity,
+			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadBytes, prometheus.GaugeValue, item.Download,
+				item.HostName, item.Vendor, "", "", item.Ip, item.Mac, site, client.SiteId, item.ApName, item.Ssid, wifiMode)
+			ch <- prometheus.MustNewConstMetric(c.omadaClientUploadBytes, prometheus.GaugeValue, item.Upload,
 				item.HostName, item.Vendor, "", "", item.Ip, item.Mac, site, client.SiteId, item.ApName, item.Ssid, wifiMode)
 
 			ch <- prometheus.MustNewConstMetric(c.omadaClientSignalDbm, prometheus.GaugeValue, -item.SignalLevel,
 				item.HostName, item.Vendor, item.Ip, item.Mac, item.ApName, site, client.SiteId, item.Ssid, wifiMode)
 		}
 		if !item.Wireless {
-			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadActivityBytes, prometheus.GaugeValue, item.Activity,
+			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadBytes, prometheus.GaugeValue, item.Download,
+				item.HostName, item.Vendor, port, vlanId, item.Ip, item.Mac, site, client.SiteId, "", "", "")
+			ch <- prometheus.MustNewConstMetric(c.omadaClientUploadBytes, prometheus.GaugeValue, item.Upload,
 				item.HostName, item.Vendor, port, vlanId, item.Ip, item.Mac, site, client.SiteId, "", "", "")
 		}
 	}
@@ -55,8 +61,14 @@ func (c *clientCollector) Collect(ch chan<- prometheus.Metric) {
 
 func NewClientCollector(c *api.Client) *clientCollector {
 	return &clientCollector{
-		omadaClientDownloadActivityBytes: prometheus.NewDesc("omada_client_download_activity_bytes",
-			"The current download activity for the client in bytes.",
+		omadaClientDownloadBytes: prometheus.NewDesc("omada_client_download",
+			"Accumulative download traffic for the client in bytes.",
+			[]string{"client", "vendor", "switch_port", "vlan_id", "ip", "mac", "site", "site_id", "ap_name", "ssid", "wifi_mode"},
+			nil,
+		),
+
+		omadaClientUploadBytes: prometheus.NewDesc("omada_client_upload",
+			"Accumulative upload traffic for the client in bytes.",
 			[]string{"client", "vendor", "switch_port", "vlan_id", "ip", "mac", "site", "site_id", "ap_name", "ssid", "wifi_mode"},
 			nil,
 		),

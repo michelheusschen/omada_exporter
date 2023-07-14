@@ -10,27 +10,13 @@ import (
 )
 
 func (c *Client) GetDevices() ([]Device, error) {
-	loggedIn, err := c.IsLoggedIn()
-	if err != nil {
-		return nil, err
-	}
-	if !loggedIn {
-		log.Info().Msg(fmt.Sprintf("not logged in, logging in with user: %s", c.Config.Username))
-		err := c.Login()
-		if err != nil || c.token == "" {
-			log.Error().Err(err).Msg("failed to login")
-			return nil, err
-		}
-	}
-
 	url := fmt.Sprintf("%s/%s/api/v2/sites/%s/devices", c.Config.Host, c.omadaCID, c.SiteId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	setHeaders(req, c.token)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.makeLoggedInRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +35,7 @@ func (c *Client) GetDevices() ([]Device, error) {
 		if d.Type == "switch" {
 			switchPorts, err := c.GetPorts(d.Mac)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get ports: %s", err)
+				return nil, fmt.Errorf("failed to get ports: %w", err)
 			}
 			devicedata.Result[i].Ports = switchPorts
 		}
@@ -72,6 +58,8 @@ type Device struct {
 	MemUtil     float64 `json:"memUtil"`
 	Uptime      float64 `json:"uptimeLong"`
 	NeedUpgrade bool    `json:"needUpgrade"`
+	Download    float64 `json:"download"`
+	Upload      float64 `json:"upload"`
 	TxRate      float64 `json:"txRate"`
 	RxRate      float64 `json:"rxRate"`
 	PoeRemain   float64 `json:"poeRemain"`
