@@ -7,7 +7,8 @@ import (
 	"net/http/cookiejar"
 	"time"
 
-	"github.com/charlie-haley/omada_exporter/pkg/config"
+	"github.com/michelheusschen/omada_exporter/pkg/config"
+	log "github.com/rs/zerolog/log"
 )
 
 type Client struct {
@@ -16,6 +17,24 @@ type Client struct {
 	token      string
 	omadaCID   string
 	SiteId     string
+}
+
+func (c *Client) makeLoggedInRequest(req *http.Request) (*http.Response, error) {
+	loggedIn, err := c.IsLoggedIn()
+	if err != nil {
+		return nil, err
+	}
+	if !loggedIn {
+		log.Info().Msg(fmt.Sprintf("not logged in, logging in with user: %s", c.Config.Username))
+		err := c.Login()
+		if err != nil || c.token == "" {
+			log.Error().Err(err).Msg("failed to login")
+			return nil, err
+		}
+	}
+
+	setHeaders(req, c.token)
+	return c.httpClient.Do(req)
 }
 
 func setuphttpClient(insecure bool, timeout int) (*http.Client, error) {

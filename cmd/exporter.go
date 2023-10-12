@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charlie-haley/omada_exporter/pkg/api"
-	"github.com/charlie-haley/omada_exporter/pkg/collector"
-	"github.com/charlie-haley/omada_exporter/pkg/config"
+	"github.com/michelheusschen/omada_exporter/pkg/api"
+	"github.com/michelheusschen/omada_exporter/pkg/collector"
+	"github.com/michelheusschen/omada_exporter/pkg/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	zerolog "github.com/rs/zerolog"
