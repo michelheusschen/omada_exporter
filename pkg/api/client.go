@@ -86,14 +86,13 @@ type NetworkClient struct {
 	Wireless    bool    `json:"wireless"`
 	SwitchMac   string  `json:"switchMac"`
 	Vendor      string  `json:"vendor"`
-	Download    float64 `json:"trafficDown"`
-	Upload      float64 `json:"trafficUp"`
+	Activity    float64 `json:"activity"`
 	SignalLevel float64 `json:"signalLevel"`
 	WifiMode    float64 `json:"wifiMode"`
 	Ssid        string  `json:"ssid"`
-	Rssi		float64 `json:"rssi"`
-	TrafficDown	float64 `json:"trafficDown"`
-	TrafficUp	float64 `json:"trafficUp"`
-	RxRate		float64 `json:"rxRate"`
-	TxRate		float64 `json:"txRate"`
+	Rssi        float64 `json:"rssi"`
+	TrafficDown float64 `json:"trafficDown"`
+	TrafficUp   float64 `json:"trafficUp"`
+	RxRate      float64 `json:"rxRate"`
+	TxRate      float64 `json:"txRate"`
 }

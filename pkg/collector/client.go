@@ -9,21 +9,19 @@ import (
 )
 
 type clientCollector struct {
-	omadaClientDownloadBytes  *prometheus.Desc
-	omadaClientUploadBytes    *prometheus.Desc
-	omadaClientSignalDbm      *prometheus.Desc
-	omadaClientRssiDbm        *prometheus.Desc
-	omadaClientTrafficDown    *prometheus.Desc
-	omadaClientTrafficUp      *prometheus.Desc
-	omadaClientTxRate         *prometheus.Desc
-	omadaClientRxRate         *prometheus.Desc
-	omadaClientConnectedTotal *prometheus.Desc
-	client                    *api.Client
+	omadaClientDownloadActivityBytes *prometheus.Desc
+	omadaClientSignalDbm             *prometheus.Desc
+	omadaClientRssiDbm               *prometheus.Desc
+	omadaClientTrafficDown           *prometheus.Desc
+	omadaClientTrafficUp             *prometheus.Desc
+	omadaClientTxRate                *prometheus.Desc
+	omadaClientRxRate                *prometheus.Desc
+	omadaClientConnectedTotal        *prometheus.Desc
+	client                           *api.Client
 }
 
 func (c *clientCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.omadaClientDownloadBytes
-	ch <- c.omadaClientUploadBytes
+	ch <- c.omadaClientDownloadActivityBytes
 	ch <- c.omadaClientSignalDbm
 	ch <- c.omadaClientRssiDbm
 	ch <- c.omadaClientTrafficDown
@@ -82,16 +80,12 @@ func (c *clientCollector) Collect(ch chan<- prometheus.Metric) {
 			CollectWirelessMetrics(c.omadaClientRxRate, prometheus.GaugeValue, item.RxRate)
 
 			totals[wifiMode] += 1
-			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadBytes, prometheus.GaugeValue, item.Download,
-				item.HostName, item.Vendor, item.Ip, item.Mac, site, client.SiteId, "wireless", wifiMode, item.ApName, item.Ssid, "", "")
-			ch <- prometheus.MustNewConstMetric(c.omadaClientUploadBytes, prometheus.GaugeValue, item.Upload,
+			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadActivityBytes, prometheus.GaugeValue, item.Activity,
 				item.HostName, item.Vendor, item.Ip, item.Mac, site, client.SiteId, "wireless", wifiMode, item.ApName, item.Ssid, "", "")
 		}
 		if !item.Wireless {
 			totals["wired"] += 1
-			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadBytes, prometheus.GaugeValue, item.Download,
-				item.HostName, item.Vendor, item.Ip, item.Mac, site, client.SiteId, "wired", "", "", "", port, vlanId)
-			ch <- prometheus.MustNewConstMetric(c.omadaClientUploadBytes, prometheus.GaugeValue, item.Upload,
+			ch <- prometheus.MustNewConstMetric(c.omadaClientDownloadActivityBytes, prometheus.GaugeValue, item.Activity,
 				item.HostName, item.Vendor, item.Ip, item.Mac, site, client.SiteId, "wired", "", "", "", port, vlanId)
 		}
 	}
@@ -112,14 +106,8 @@ func NewClientCollector(c *api.Client) *clientCollector {
 	wired_client_labels := append(client_labels, "switch_port", "vlan_id")
 
 	return &clientCollector{
-		omadaClientDownloadBytes: prometheus.NewDesc("omada_client_download",
-			"Accumulative download traffic for the client in bytes.",
-			wired_client_labels,
-			nil,
-		),
-
-		omadaClientUploadBytes: prometheus.NewDesc("omada_client_upload",
-			"Accumulative upload traffic for the client in bytes.",
+		omadaClientDownloadActivityBytes: prometheus.NewDesc("omada_client_download_activity_bytes",
+			"The current download activity for the client in bytes.",
 			wired_client_labels,
 			nil,
 		),
